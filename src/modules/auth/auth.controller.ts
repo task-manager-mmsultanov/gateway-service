@@ -1,4 +1,4 @@
-import { Controller, HttpException, HttpStatus, Post, UnauthorizedException } from '@nestjs/common'
+import { Controller, HttpCode, HttpException, HttpStatus, Post, UnauthorizedException } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { ResponseUserLoginDTO } from './dto/response-user-login.dto'
 import { CreateUserDTO } from '../users/dto/create-user.dto'
@@ -19,14 +19,12 @@ export class AuthController {
      * @param {SignInDTO} SignInDTO - The sign-in data.
      * @returns {Promise<any>} - A promise that resolves with the result of the sign-in operation.
      */
+    @HttpCode(HttpStatus.OK)
     @Post('login')
-    async Login(@Payload() SignInDTO: SignInDTO): Promise<ResponseUserLoginDTO | CustomError> {
+    async Login(@Payload() SignInDTO: SignInDTO): Promise<ResponseUserLoginDTO | UnauthorizedException> {
         const response = await this.authService.sign_in(SignInDTO.email, SignInDTO.password)
-        if (response instanceof CustomError) {
-            return {
-                statusCode: HttpStatus.UNAUTHORIZED,
-                message: response.message
-            }
+        if (response instanceof UnauthorizedException) {
+            throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED)
         }
         return new ResponseUserLoginDTO(response)
     }
@@ -37,6 +35,7 @@ export class AuthController {
      * @param {CreateUserDTO} signUpDTO - The sign-up data.
      * @returns {Promise<any>} - A promise that resolves with the result of the sign-up operation.
      */
+    @HttpCode(HttpStatus.CREATED)
     @Post('register')
     async Register(@Payload() signUpDTO: CreateUserDTO): Promise<RegisterUserDTO | CustomError> {
         const response = await this.authService.sign_up(signUpDTO)

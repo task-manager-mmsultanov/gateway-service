@@ -14,15 +14,15 @@ export class AuthService {
         private jwtService: JwtService
     ) {}
 
-    async sign_in(email: string, password: string): Promise<ResponseUserLoginInterface | CustomError> {
+    async sign_in(email: string, password: string): Promise<ResponseUserLoginInterface | UnauthorizedException> {
         const user = await this.usersService.findOne(email)
         if (!user) {
-            return new CustomError({ statusCode: 401, message: 'Invalid credentials' })
+            return new UnauthorizedException()
         }
         const isMatch = await bcrypt.compare(password, user.dataValues.password)
 
         if (!isMatch) {
-            return new CustomError({ statusCode: 401, message: 'Invalid credentials' })
+            return new UnauthorizedException()
         }
         const payload = { sub: user.id, username: user.first_name, role: user.role.slug }
         const { password: _, ...result } = user
